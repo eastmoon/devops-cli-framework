@@ -1,0 +1,6 @@
+desc: "New shell command."
+args:
+    --val:
+        desc: "Give me value"
+        var: value
+        type: string

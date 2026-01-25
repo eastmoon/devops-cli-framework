@@ -1,0 +1,2 @@
+# Runtime configuration variable in kind
+KIND_RC_VAR="It is runtime configuration variable in kind."

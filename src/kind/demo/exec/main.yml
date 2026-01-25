@@ -1,0 +1,5 @@
+desc: "Execute some action"
+attr:
+  STOP-CLI-PARSER: 1
+  VALUE: 123
+  BOOLEAN-TRUE: 1
