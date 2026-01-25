@@ -1,14 +1,1 @@
 desc: "Show environment variable"
-attr:
-  VALUE: 123
-  BOOL: 0
-  TMP: "tmp string"
-args:
-  --val:
-    var: VALUE
-    type: string
-    desc: "val description"
-  --op:
-    var: BOOL
-    type: bool
-    desc: "op description"
