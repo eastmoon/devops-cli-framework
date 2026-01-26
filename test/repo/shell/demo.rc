@@ -1,0 +1,6 @@
+# Project devlopment server port
+DEV_SERVER_PORT=5000
+# Project devlopment server hostname
+DEV_SERVER_HOSTNAME=demo-server
+# Demo runtime configuration variable
+DEMO_VAR="It is demo variable"

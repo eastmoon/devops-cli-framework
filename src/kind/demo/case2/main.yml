@@ -1,0 +1,5 @@
+desc: "Case 2 : Default attribute demo."
+attr:
+  STOP-CLI-PARSER: 1
+  VALUE: 123
+  BOOLEAN-TRUE: 1

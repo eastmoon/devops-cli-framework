@@ -137,7 +137,8 @@ args:
 + ```attr``` 為命令執行時會建立的屬性變數與預設值
     - 設定 ```STOP-CLI-PARSER``` 變數會中斷框架解析命令的過程，並將未解晰的內容以參數方式傳遞給 ```main.sh``` 或工作流 ```action.sh``` 中
 + ```args``` 為命令提供的選項參數
-    - ```--val```、```-op``` 為選項參數名，用於 ```do [cmd] --val=1234``` 中
+    - 參數是指在命令串中，以 ```-``` 符號開頭的字串
+    - ```--val```、```--op``` 為選項參數名，用於 ```do [cmd] --val=1234``` 中
     - ```desc``` 為此選項的描述
     - ```var``` 為此選項參數提供時會覆蓋的屬性變數名稱
     - ```type``` 為此選項的類型，主要分為 string 與 bool 兩類
@@ -268,67 +269,86 @@ super
 
 ### 測試
 
-+ 階層結構
-```
-devops-cli --help
-devops-cli demo --help
-devops-cli demo dev --help
-```
+以下測試範例執行，請先完成發佈與封裝 ```do.bat pack```。
 
-+ 參數替換
-```
-devops-cli env --op
-devops-cli env --val=5678
-devops-cli env --val="1234 5678"
-```
+#### 階層結構
 
-+ 執行命令，測試中斷屬性 ```STOP-CLI-PARSER```
-```
-devops-cli exec demo -e="1234 5678" tmp
-```
+請至 [test/base](./test/base) 目錄執行一下指令。
 
-+ 執行預設工作流命令，不提供 ```main.sh```
+以下範本為 [kind/demo/case1](./src/kind/demo/case1)，其為標準命令結構，執行時會先執行 ```main.sh``` 並基於 ```super``` 函數執行標準流程，依序運行 ```preaction.sh```、```action.sh```、```postaction.sh```。
+
 ```
 ## 執行
-devops-cli demo dev
+do.bat case1
 ## 輸出
-[+] pre-ction script
+--- main script ---
+[+] pre-action script
 [+] action script
-[+] post-ction script
+[+] post-action script
 ```
 
-+ 執行擴展工作流命令，不提供 ```main.sh```，在類型提供 ```action.sh```，客製提供 ```postaction.sh```
+以下範本為 [kind/demo/case1/sub](./src/kind/demo/case1/sub)，其為簡略命令結構，執行時因為不存在 ```main.sh```，直接執行標準流程，並依序運行 ```preaction.sh```、```action.sh```、```postaction.sh```。
+
 ```
 ## 執行
-devops-cli demo dup
+do.bat case1 sub
 ## 輸出
-[+] action script in kind
-[+] post-action script in shell
+[+] pre-action script
+[+] action script
+[+] post-action script
 ```
 
-+ 執行覆蓋命令配置檔，客製提供 ```main.yml```，覆蓋類型的 ```main.yml```
+#### 預設變數
+
+請至 [test/base](./test/base) 目錄執行一下指令。
+
+以下範本為 [kind/demo/case2](./src/kind/demo/case2)，配置設定 ```main.yml``` 的 ```attr``` 可以宣告該命令的屬性變數。
+
+```
+do.bat case2
+```
+
+#### 中斷命令解析
+
+請至 [test/base](./test/base) 目錄執行一下指令。
+
+以下範本為 [kind/demo/case2](./src/kind/demo/case2)，配置設定 ```main.yml``` 的 ```attr``` 包括特殊屬性 ```STOP-CLI-PARSER```，此屬性會中斷框架解析流程，將未解析的命令、參數傳遞給此命令。
+
+```
+do.bat case2 -e="1234 5678" tmp
+```
+
+#### 參數替換
+
+請至 [test/base](./test/base) 目錄執行一下指令。
+
+以下範本為 [kind/demo/case3](./src/kind/demo/case3)，配置設定 ```main.yml``` 的 ```args``` 可以宣告該命令的會解析的參數，原則上 ```args``` 解析的值會存入 ```attr``` 中宣告的一個屬性變數。
+
+```
+do.bat case3
+do.bat case3 --op
+do.bat case3 --val=5678
+do.bat case3 --val="1234 5678"
+```
+
+#### 自訂結構 - 新增命令
+
+請至 [test/extends](./test/extends) 目錄執行一下指令。
+
 ```
 ## 執行
-devops-cli demo dup --help
-## 輸出
-This is a Command Line Interface with project devops
-Replace legacy shell command.
-
-Options:
-    --help, -h        Show more command information.
-
-Run 'do [COMMAND] --help' for more information.
+do.bat new
 ```
 
-+ 執行客製命令，在類型中不存在的命令
-```
-devops-cli demo new
-```
+以上範本為 [test/extends/shell/new](./test/extends/shell/new)，配置設定 ```do.yml``` 的 ```kind``` 決定會使用框架中提供的類型為基礎，而 ```path``` 指向的目錄若再 ```do.bat``` 有掛載本地目錄，則該目錄的指令會添加或覆蓋原有的命令。
 
-+ 執行客製擴展類型命令，在客製命令中使用 super 函數
+#### 自訂結構 - 覆蓋命令
+
+請至 [test/extends](./test/extends) 目錄執行一下指令。
+
 ```
 ## 執行
-devops-cli demo
+do.bat case1
 ## 輸出
 --- custom main script ---
 --- main script ---
@@ -337,5 +357,78 @@ devops-cli demo
 [+] action script
 [+] post-ction script
 ```
+
+以上範本為 [test/extends/shell/case1](./test/extends/shell/case1)，在未提供覆蓋前 ```do.bat case1``` 的執行結果應如前述階層結構所述，但在此因為掛載擴展命令且命令目錄相同，框架會優先使用擴展的內容，若此擴展腳本執行 ```super``` 函數則會呼叫框架內原本的腳本。
+
+#### 自訂結構 - 覆蓋與擴展腳本
+
+請至 [test/base](./test/base) 目錄執行一下指令。
+
+```
+## 執行
+do.bat case1 onlyaction
+## 輸出
+[+] action script
+```
+
+同樣指令至 [test/extends](./test/extends) 目錄執行一下指令。
+
+```
+## 執行
+do.bat case1 onlyaction
+## 輸出
+[+] action script
+[+] post-action script in shell
+```
+
+也可分別在不同目錄執行 ```do.bat case1 onlyaction -h```。
+
+以上範本分別為：
+
++ [kind/demo/case1/onlyaction](./src/kind/demo/case1/onlyaction)
++ [test/extends/shell/case1/onlyaction](./test/extends/shell/case1/onlyaction)
+
+擴展指令的特徵除了新增、覆蓋外就是利用擴大原本未添加的行為，例如範本中框架類型在 ```onlyaction``` 僅有 ```action.sh```，而在擴展的 ```onlyaction``` 新增了 ```postaction.sh``` 並修改 ```main.yml``` 來覆蓋說明的描述內容。
+
+#### 自訂結構 - 替換執行參數檔
+
+請至 [test/repo](./test/repo) 目錄執行一下指令。
+
+```
+do.bat --rc=/usr/local/repo/shell/demo.rc env
+```
+
+以上範本將原本使用 ```do.rc``` 換成在指定目錄的 ```demo.rc``` 檔案，原則上可用的檔案應該都在 ```do.bat``` 啟動容器時掛載的目錄 ```-v %cd%:/usr/local/repo```。
+
+#### 自訂結構 - 執行容器
+
+請至 [test/repo](./test/repo) 目錄執行一下指令。
+
+```
+do.bat case1
+```
+
+以上範本為 [test/repo/shell/case1](./test/repo/shell/case1)，框架容器本身具有 docker cli，且在 ```do.bat``` 掛載 docker.sock 確保內部容器可以調用外部容器的服務，從而建立基於容器運行的指令操作。
+
+#### 自訂結構 - 容器目錄掛載
+
+請至 [test/repo](./test/repo) 目錄執行一下指令。
+
+```
+do.bat case2
+```
+
+以上範本為 [test/repo/shell/case2](./test/repo/shell/case2)，框架容器本身是一個封裝，倘若要調用第三方容器運行，則必需提供正確 HOST 目錄才能確保被啟用的容器擁有正確的路徑設定。
+
+因此在 ```do.bat``` 需額外提供需要的資訊變數，
+
+```
+docker run -ti --rm ^
+  -e CLI_REPO_NAME=%PROJECT_NAME% ^
+  -e CLI_REPO_DIR="/usr/local/repo" ^
+  -e CLI_REPO_MAPPING_DIR="%cd%" ^
+```
+
+而這些變數可以透過 ```do.bat env``` 確認，並在執行命令時加以利用，確保被調用的容器使用正確的路徑資訊。
 
 ## 參考

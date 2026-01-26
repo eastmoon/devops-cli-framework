@@ -1,1 +1,0 @@
-echo "[+] pre-ction script"
