@@ -10,3 +10,4 @@
 *.html  eol=lf
 *.css   eol=lf
 *.py    eol=lf
+Dockerfile eol=lf
