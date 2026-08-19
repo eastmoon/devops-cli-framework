@@ -167,11 +167,10 @@ goto end
 @rem ------------------- Command "pub" method -------------------
 
 :cli-pub
-    if EXIST %CLI_DIRECTORY%\cache\publish (rd /S /Q %cd%\cache\publish)
+    if EXIST %cd%\cache\publish (rd /S /Q %cd%\cache\publish)
     mkdir %cd%\cache\publish
-    xcopy /Y /S /Q %cd%\conf\docker\ %cd%\cache\publish
-    if NOT EXIST %cd%\cache\publish\cli (mkdir %cd%\cache\publish\cli)
-    xcopy /Y /S /Q %cd%\src\ %cd%\cache\publish\cli
+    xcopy /Y /S /Q %cd%\src\ %cd%\cache\publish\
+    if EXIST %cd%\cache\publish\kind\demo (rd /S /Q %cd%\cache\publish\kind\demo)
     goto end
 
 :cli-pub-args
@@ -190,7 +189,13 @@ goto end
 
 :cli-pack
     call :cli-pub
-    docker build -t devops-cli-fw:latest %cd%\cache\publish
+    cd %cd%\cache\publish
+    tar -zcvf %PROJECT_NAME%.tgz .
+    cd %CLI_DIRECTORY%
+    if EXIST %cd%\cache\package (rd /S /Q %cd%\cache\package)
+    mkdir %cd%\cache\package
+    move %cd%\cache\publish\%PROJECT_NAME%.tgz %cd%\cache\package\
+
     goto end
 
 :cli-pack-args
