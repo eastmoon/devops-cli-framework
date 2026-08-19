@@ -1,1 +1,1 @@
-docker run -ti --rm hello-world
+docker run --rm hello-world
