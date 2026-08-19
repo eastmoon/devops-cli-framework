@@ -195,6 +195,7 @@ goto end
     if EXIST %cd%\cache\package (rd /S /Q %cd%\cache\package)
     mkdir %cd%\cache\package
     move %cd%\cache\publish\%PROJECT_NAME%.tgz %cd%\cache\package\
+    git log --pretty=format:"* %%h - %%s (%%an, %%ad)" --date=short > %cd%\cache\package\CHANGELOG.md
 
     goto end
 
