@@ -1,2 +1,2 @@
 kind: default
-path: /usr/local/repo/shell
+path: ./shell

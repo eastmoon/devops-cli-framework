@@ -83,13 +83,18 @@ devops-cli
     - 框架開發時不應使用此目錄，該目錄提供給專案執行框架時掛載。
     - 預設位置如結構圖所示，若要替換目錄位置使用 ```do.yml```
 
+**注意**，```utils```、```kind```、```shell``` 目錄實際位置可以透過 ```do.ini``` 與 ```do.yml``` 控制相對位置。
+
 ### 跨平台
 
 本專案框架完成容器化封裝後，會在 Docker 的映像檔清單中；實務運用則依據作業系統環境執行啟動腳本，讓啟動腳本基於映像檔啟動容器並執行相應指令。
 
 跨平台的操作，相應內容參考 ```test``` 目錄，其中包括以下內容：
 
-+ 啟動腳本 ```do``` 具有 bat、sh、pl、zsh 等附檔名版本，以對應在不同作業系統下的容器啟動程序
++ 啟動腳本 ```do``` 保留 shell 版本，針對不同作業系統改用相應的 Console
+  - Windows : MINGW64
+  - Mac : Terminal
++ 提供 ```do.ini``` 設定 Command-Line Interface 核心參數
 + 提供 ```do.yml``` 設定框架運作參數
 + 提供 ```do.rc``` 設定命令執行的自訂變數
 + 提供 ```shell``` 目錄建置、擴展、覆蓋可運行命令
@@ -195,7 +200,7 @@ do.sh -- read --> main.yml
 這類命令應封裝於框架容器中
 
 ```
-/usr/local/devops/kind/[kind-name]
+/usr/local/devops/src/kind/[kind-name]
     └ env
         └ main.yml
 ```
@@ -207,7 +212,7 @@ do.sh -- read --> main.yml
 這類命令應於框架容器執行時掛載
 
 ```
-/usr/local/devops/shell
+/usr/local/devops/test/extends/shell
     └ new
         └ main.yml
 ```
@@ -219,7 +224,7 @@ do.sh -- read --> main.yml
 倘若命令目錄不提供 ```main.sh``` 檔案則會執行標準工作流 action，會依據執行 ```preaction.sh```、```action.sh```、```postaction.sh``` 腳本檔。
 
 ```
-/usr/local/devops/shell
+/usr/local/devops/test/extends/shell
     └ new
         └ main.yml
         └ action.sh
@@ -232,10 +237,10 @@ do.sh -- read --> main.yml
 若類型命令內容不適當，可以使用客製命令覆蓋。
 
 ```
-/usr/local/devops/kind/[kind-name]
+/usr/local/devops/src/kind/[kind-name]
     └ env
         └ main.sh
-/usr/local/devops/shell
+/usr/local/devops/test/extends/shell
     └ env
         └ main.sh
 ```
@@ -247,10 +252,10 @@ do.sh -- read --> main.yml
 若類型命令若有不足之處，或需要添加額外行為時使用，可使用 super 函數。
 
 ```
-/usr/local/devops/kind/[kind-name]
+/usr/local/devops/src/kind/[kind-name]
     └ env
         └ main.sh
-/usr/local/devops/shell
+/usr/local/devops/test/extends/shell
     └ new
         └ main.sh
 ```
@@ -269,7 +274,7 @@ super
 
 ### 測試
 
-以下測試範例執行，請先完成發佈與封裝 ```do.bat pack```。
+以下測試進入開發環境 ```do dev``` 或執行前述作業系統相應的命令列環境。
 
 #### 階層結構
 
@@ -279,7 +284,7 @@ super
 
 ```
 ## 執行
-do.bat case1
+bash do.sh case1
 ## 輸出
 --- main script ---
 [+] pre-action script
@@ -291,7 +296,7 @@ do.bat case1
 
 ```
 ## 執行
-do.bat case1 sub
+bash do.sh case1 sub
 ## 輸出
 [+] pre-action script
 [+] action script
@@ -305,7 +310,7 @@ do.bat case1 sub
 以下範本為 [kind/demo/case2](./src/kind/demo/case2)，配置設定 ```main.yml``` 的 ```attr``` 可以宣告該命令的屬性變數。
 
 ```
-do.bat case2
+bash do.sh case2
 ```
 
 #### 中斷命令解析
@@ -315,7 +320,7 @@ do.bat case2
 以下範本為 [kind/demo/case2](./src/kind/demo/case2)，配置設定 ```main.yml``` 的 ```attr``` 包括特殊屬性 ```STOP-CLI-PARSER```，此屬性會中斷框架解析流程，將未解析的命令、參數傳遞給此命令。
 
 ```
-do.bat case2 -e="1234 5678" tmp
+bash do.sh case2 -e="1234 5678" tmp
 ```
 
 #### 參數替換
@@ -325,10 +330,10 @@ do.bat case2 -e="1234 5678" tmp
 以下範本為 [kind/demo/case3](./src/kind/demo/case3)，配置設定 ```main.yml``` 的 ```args``` 可以宣告該命令的會解析的參數，原則上 ```args``` 解析的值會存入 ```attr``` 中宣告的一個屬性變數。
 
 ```
-do.bat case3
-do.bat case3 --op
-do.bat case3 --val=5678
-do.bat case3 --val="1234 5678"
+bash do.sh case3
+bash do.sh case3 --op
+bash do.sh case3 --val=5678
+bash do.sh case3 --val="1234 5678"
 ```
 
 #### 自訂結構 - 新增命令
@@ -337,7 +342,7 @@ do.bat case3 --val="1234 5678"
 
 ```
 ## 執行
-do.bat new
+bash do.sh new
 ```
 
 以上範本為 [test/extends/shell/new](./test/extends/shell/new)，配置設定 ```do.yml``` 的 ```kind``` 決定會使用框架中提供的類型為基礎，而 ```path``` 指向的目錄若再 ```do.bat``` 有掛載本地目錄，則該目錄的指令會添加或覆蓋原有的命令。
@@ -348,7 +353,7 @@ do.bat new
 
 ```
 ## 執行
-do.bat case1
+bash do.sh case1
 ## 輸出
 --- custom main script ---
 --- main script ---
@@ -366,7 +371,7 @@ do.bat case1
 
 ```
 ## 執行
-do.bat case1 onlyaction
+bash do.sh case1 onlyaction
 ## 輸出
 [+] action script
 ```
@@ -375,7 +380,7 @@ do.bat case1 onlyaction
 
 ```
 ## 執行
-do.bat case1 onlyaction
+bash do.sh case1 onlyaction
 ## 輸出
 [+] action script
 [+] post-action script in shell
@@ -395,7 +400,7 @@ do.bat case1 onlyaction
 請至 [test/repo](./test/repo) 目錄執行一下指令。
 
 ```
-do.bat --rc=/usr/local/repo/shell/demo.rc env
+bash do.sh --rc=/usr/local/repo/shell/demo.rc env
 ```
 
 以上範本將原本使用 ```do.rc``` 換成在指定目錄的 ```demo.rc``` 檔案，原則上可用的檔案應該都在 ```do.bat``` 啟動容器時掛載的目錄 ```-v %cd%:/usr/local/repo```。
@@ -405,7 +410,7 @@ do.bat --rc=/usr/local/repo/shell/demo.rc env
 請至 [test/repo](./test/repo) 目錄執行一下指令。
 
 ```
-do.bat case1
+bash do.sh case1
 ```
 
 以上範本為 [test/repo/shell/case1](./test/repo/shell/case1)，框架容器本身具有 docker cli，且在 ```do.bat``` 掛載 docker.sock 確保內部容器可以調用外部容器的服務，從而建立基於容器運行的指令操作。
@@ -415,18 +420,18 @@ do.bat case1
 請至 [test/repo](./test/repo) 目錄執行一下指令。
 
 ```
-do.bat case2
+bash do.sh case2
 ```
 
 以上範本為 [test/repo/shell/case2](./test/repo/shell/case2)，框架容器本身是一個封裝，倘若要調用第三方容器運行，則必需提供正確 HOST 目錄才能確保被啟用的容器擁有正確的路徑設定。
 
-因此在 ```do.bat``` 需額外提供需要的資訊變數，
+因此在 ```do.ini``` 需額外提供需要的資訊變數，
 
 ```
-docker run -ti --rm ^
-  -e CLI_REPO_NAME=%PROJECT_NAME% ^
-  -e CLI_REPO_DIR="/usr/local/repo" ^
-  -e CLI_REPO_MAPPING_DIR="%cd%" ^
+; Current control repository name.
+CLI_REPO_NAME=${PROJECT_NAME}
+; Current control repository at which directory in devsop framework container.
+CLI_REPO_DIR=${CLI_DIRECTORY}
 ```
 
 而這些變數可以透過 ```do.bat env``` 確認，並在執行命令時加以利用，確保被調用的容器使用正確的路徑資訊。
