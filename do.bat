@@ -17,6 +17,7 @@
 @echo off
 setlocal
 setlocal enabledelayedexpansion
+chcp 65001
 
 @rem ------------------- declare CLI file variable -------------------
 @rem retrieve project name
@@ -149,8 +150,8 @@ goto end
     @rem Execute image
     docker run -ti --rm ^
         -v "//var/run/docker.sock:/var/run/docker.sock" ^
-        -v %CLI_DIRECTORY%\src:/usr/local/devops ^
-        -v %CLI_DIRECTORY%\test\shell:/usr/local/devops/shell ^
+        -v %CLI_DIRECTORY%\src:/usr/local/devops/src ^
+        -v %CLI_DIRECTORY%\test:/usr/local/devops/test ^
         -w /usr/local/devops ^
         devops-cli-fw bash
     goto end

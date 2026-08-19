@@ -85,8 +85,9 @@ function command-description() {
         for file in ${TARGET_COMMAND[@]}; do
             local COMMAND_NAME=${file%/*}
             local COMMAND_NAME=${COMMAND_NAME##*/}
+            local COMMAND_DESC=$(yq '.desc' ${file})
             if [ -n "${COMMAND_NAME}" ]; then
-                printf "    %-10s        %-40s\n" "${COMMAND_NAME}" "$(yq '.desc' ${file})"
+                printf "    %-10s        %-40s\n" "${COMMAND_NAME}" "${COMMAND_DESC}"
             fi
         done
     fi
