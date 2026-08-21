@@ -73,7 +73,7 @@ devops-cli
         + 第三執行，框架執行若提供 ```--rc```，則額外執行該檔案，用於覆蓋前兩個產生的變數
     - ```do.yml``` 定義框架參數
         + 原則上與 ```do.ini``` 用途相似，但影響變數會依據邏輯改變數量。
-        + 參數皆有預設值，若執行階段提供該檔案，可用來變更運作參數。
+        + 參數會於 ```do.ini``` 提供預設值，若執行階段提供該檔案，則以此檔案的變數優先。
 + ```utils``` 為框架工具程式目錄。
 + ```kind``` 為基於類型區分的命令集目錄。
     - 預設執行 ```default``` 的命令集，若要更換使用 ```do.yml```。
@@ -87,15 +87,20 @@ devops-cli
 
 ### 跨平台
 
-本專案框架完成容器化封裝後，會在 Docker 的映像檔清單中；實務運用則依據作業系統環境執行啟動腳本，讓啟動腳本基於映像檔啟動容器並執行相應指令。
+對於開發運維跨平台有幾個環境要求：
 
-跨平台的操作，相應內容參考 ```test``` 目錄，其中包括以下內容：
+1. 主機是否提供 Shell 腳本執行環境
+2. 主機是否提供容器虛擬化服務環境，例如 Docker
+
+實務運用則依據作業系統環境實際可運行的方式，透過啟動器 ( Launcher ) 啟動腳本並執行相應指令。
+
+跨平台的操作範本 ( 使用環境 1 的配置 )，相應內容參考 ```test``` 目錄，其中包括以下內容：
 
 + 啟動腳本 ```do``` 保留 shell 版本，針對不同作業系統改用相應的 Console
   - Windows : MINGW64
   - Mac : Terminal
-+ 提供 ```do.ini``` 設定 Command-Line Interface 核心參數
-+ 提供 ```do.yml``` 設定框架運作參數
++ 提供 ```do.ini``` 設定命令介面核心參數
++ 提供 ```do.yml``` 設定開發運維框架運作核心參數
 + 提供 ```do.rc``` 設定命令執行的自訂變數
 + 提供 ```shell``` 目錄建置、擴展、覆蓋可運行命令
 
@@ -103,7 +108,7 @@ devops-cli
 
 ### 框架配置檔
 
-本專案框架完成容器化封裝後，會將開發完成的命令集分存於容器供開發者運用，對此可透過 ```do.yml``` 配置相關框架資訊。
+本專案設計 ```do.ini```、```do.yml``` 兩個參數配置檔，是考量容器化封裝開發運維框架後，```do.ini``` 的變數固定，僅需提供 ```do.yml``` 配置相關框架資訊。
 
 + 設定 path 指定專案客製的腳本集目錄
   - 預設為 ```/usr/local/devops/shell```
@@ -111,6 +116,8 @@ devops-cli
   - 範本不指定則使用預設 ( default ) 範本
   - 範本包括至少一個命令
   - 範本預設在 ```/usr/local/devops-cli/kind``` 下
+
+目錄 ```/usr/local/devops/``` 為啟動器 ( Launcher ) 會在執行容器時掛載專案根目錄的位置。
 
 ### 命令結構
 
@@ -276,164 +283,9 @@ super
 
 以下測試進入開發環境 ```do dev``` 或執行前述作業系統相應的命令列環境。
 
-#### 階層結構
-
-請至 [test/base](./test/base) 目錄執行一下指令。
-
-以下範本為 [kind/demo/case1](./src/kind/demo/case1)，其為標準命令結構，執行時會先執行 ```main.sh``` 並基於 ```super``` 函數執行標準流程，依序運行 ```preaction.sh```、```action.sh```、```postaction.sh```。
-
-```
-## 執行
-bash do.sh case1
-## 輸出
---- main script ---
-[+] pre-action script
-[+] action script
-[+] post-action script
-```
-
-以下範本為 [kind/demo/case1/sub](./src/kind/demo/case1/sub)，其為簡略命令結構，執行時因為不存在 ```main.sh```，直接執行標準流程，並依序運行 ```preaction.sh```、```action.sh```、```postaction.sh```。
-
-```
-## 執行
-bash do.sh case1 sub
-## 輸出
-[+] pre-action script
-[+] action script
-[+] post-action script
-```
-
-#### 預設變數
-
-請至 [test/base](./test/base) 目錄執行一下指令。
-
-以下範本為 [kind/demo/case2](./src/kind/demo/case2)，配置設定 ```main.yml``` 的 ```attr``` 可以宣告該命令的屬性變數。
-
-```
-bash do.sh case2
-```
-
-#### 中斷命令解析
-
-請至 [test/base](./test/base) 目錄執行一下指令。
-
-以下範本為 [kind/demo/case2](./src/kind/demo/case2)，配置設定 ```main.yml``` 的 ```attr``` 包括特殊屬性 ```STOP-CLI-PARSER```，此屬性會中斷框架解析流程，將未解析的命令、參數傳遞給此命令。
-
-```
-bash do.sh case2 -e="1234 5678" tmp
-```
-
-#### 參數替換
-
-請至 [test/base](./test/base) 目錄執行一下指令。
-
-以下範本為 [kind/demo/case3](./src/kind/demo/case3)，配置設定 ```main.yml``` 的 ```args``` 可以宣告該命令的會解析的參數，原則上 ```args``` 解析的值會存入 ```attr``` 中宣告的一個屬性變數。
-
-```
-bash do.sh case3
-bash do.sh case3 --op
-bash do.sh case3 --val=5678
-bash do.sh case3 --val="1234 5678"
-```
-
-#### 自訂結構 - 新增命令
-
-請至 [test/extends](./test/extends) 目錄執行一下指令。
-
-```
-## 執行
-bash do.sh new
-```
-
-以上範本為 [test/extends/shell/new](./test/extends/shell/new)，配置設定 ```do.yml``` 的 ```kind``` 決定會使用框架中提供的類型為基礎，而 ```path``` 指向的目錄若再 ```do.bat``` 有掛載本地目錄，則該目錄的指令會添加或覆蓋原有的命令。
-
-#### 自訂結構 - 覆蓋命令
-
-請至 [test/extends](./test/extends) 目錄執行一下指令。
-
-```
-## 執行
-bash do.sh case1
-## 輸出
---- custom main script ---
---- main script ---
-[+] pre-ction script
-[+] custom action script
-[+] action script
-[+] post-ction script
-```
-
-以上範本為 [test/extends/shell/case1](./test/extends/shell/case1)，在未提供覆蓋前 ```do.bat case1``` 的執行結果應如前述階層結構所述，但在此因為掛載擴展命令且命令目錄相同，框架會優先使用擴展的內容，若此擴展腳本執行 ```super``` 函數則會呼叫框架內原本的腳本。
-
-#### 自訂結構 - 覆蓋與擴展腳本
-
-請至 [test/base](./test/base) 目錄執行一下指令。
-
-```
-## 執行
-bash do.sh case1 onlyaction
-## 輸出
-[+] action script
-```
-
-同樣指令至 [test/extends](./test/extends) 目錄執行一下指令。
-
-```
-## 執行
-bash do.sh case1 onlyaction
-## 輸出
-[+] action script
-[+] post-action script in shell
-```
-
-也可分別在不同目錄執行 ```do.bat case1 onlyaction -h```。
-
-以上範本分別為：
-
-+ [kind/demo/case1/onlyaction](./src/kind/demo/case1/onlyaction)
-+ [test/extends/shell/case1/onlyaction](./test/extends/shell/case1/onlyaction)
-
-擴展指令的特徵除了新增、覆蓋外就是利用擴大原本未添加的行為，例如範本中框架類型在 ```onlyaction``` 僅有 ```action.sh```，而在擴展的 ```onlyaction``` 新增了 ```postaction.sh``` 並修改 ```main.yml``` 來覆蓋說明的描述內容。
-
-#### 自訂結構 - 替換執行參數檔
-
-請至 [test/repo](./test/repo) 目錄執行一下指令。
-
-```
-bash do.sh --rc=/usr/local/repo/shell/demo.rc env
-```
-
-以上範本將原本使用 ```do.rc``` 換成在指定目錄的 ```demo.rc``` 檔案，原則上可用的檔案應該都在 ```do.bat``` 啟動容器時掛載的目錄 ```-v %cd%:/usr/local/repo```。
-
-#### 自訂結構 - 執行容器
-
-請至 [test/repo](./test/repo) 目錄執行一下指令。
-
-```
-bash do.sh case1
-```
-
-以上範本為 [test/repo/shell/case1](./test/repo/shell/case1)，框架容器本身具有 docker cli，且在 ```do.bat``` 掛載 docker.sock 確保內部容器可以調用外部容器的服務，從而建立基於容器運行的指令操作。
-
-#### 自訂結構 - 容器目錄掛載
-
-請至 [test/repo](./test/repo) 目錄執行一下指令。
-
-```
-bash do.sh case2
-```
-
-以上範本為 [test/repo/shell/case2](./test/repo/shell/case2)，框架容器本身是一個封裝，倘若要調用第三方容器運行，則必需提供正確 HOST 目錄才能確保被啟用的容器擁有正確的路徑設定。
-
-因此在 ```do.ini``` 需額外提供需要的資訊變數，
-
-```
-; Current control repository name.
-CLI_REPO_NAME=${PROJECT_NAME}
-; Current control repository at which directory in devsop framework container.
-CLI_REPO_DIR=${CLI_DIRECTORY}
-```
-
-而這些變數可以透過 ```do.bat env``` 確認，並在執行命令時加以利用，確保被調用的容器使用正確的路徑資訊。
++ [基礎結構](./test/base)
++ [擴展結構](./test/extends)
++ [專案結構](./test/repo)
++ [容器封裝](./test/container)
 
 ## 參考
