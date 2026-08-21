@@ -25,7 +25,11 @@ for v in ${attr_vars[@]}; do
     echo ${v}=${!v}
 done
 echo ""
-echo "> Show all runtime configuration (${CLI_RC_FILENAME}) variable."
+rc_file=""
+[[ ! -z ${CLI_RC_FILENAME} && -e ${CLI_RC_FILENAME} ]] && rc_file="${rc_file} ${CLI_RC_FILENAME}"
+[[ ! -z ${CONFIG_KIND_RC_FILENAME} && -e ${CONFIG_KIND_RC_FILENAME} ]] && rc_file="${rc_file} ${CONFIG_KIND_RC_FILENAME}"
+[[ ! -z ${CLI_OPTIONS_RC_FILENAME} && -e ${CLI_OPTIONS_RC_FILENAME} ]] && rc_file="${rc_file} ${CLI_OPTIONS_RC_FILENAME}"
+echo "> Show all runtime configuration (${rc_file} ) variable."
 if [[ -n ${RC_VARS} ]]; then
     for v in ${RC_VARS[@]}; do
         echo ${v}=${!v}
