@@ -55,11 +55,25 @@ function ini-parser() {
             echo "Section ${s} not find in ${CLI_INI_FILENAME}."
         fi
     fi
+    if [ -e ${CLI_INI_FILENAME} ] && [ $(command -v sed | wc -l) -gt 0 ]; then
+        s="configuration-workflow"
+        section_content=$(sed -n "/^\[${s}\]/,/^\[/{/^\[/d;/^;/d;/^$/d;p}" ${CLI_INI_FILENAME})
+        if [ ! -z "${section_content}" ]; then
+            while IFS='=' read -r k v; do
+                eval v="${v}"
+                export ${k}="${v}"
+            done <<< "${section_content}"
+        else
+            echo "Section ${s} not find in ${CLI_INI_FILENAME}."
+        fi
+    fi
 }
 
 # ------------------- execute script -------------------
 # parser configuration file
 ini-parser
+[ ! -z ${CLI_SHELL_DIRECTORY} ] && CLI_SHELL_DIRECTORY=$(realpath "$CLI_SHELL_DIRECTORY") || true
+[ ! -z ${CLI_UTILS_DIRECTORY} ] && CLI_UTILS_DIRECTORY=$(realpath "$CLI_UTILS_DIRECTORY") || true
 
 # import libraries
 if [ ! -z ${CLI_UTILS_DIRECTORY} ] && [ -d ${CLI_UTILS_DIRECTORY} ]; then
