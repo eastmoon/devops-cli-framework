@@ -121,7 +121,19 @@ function common-args() {
             SHOW_HELP=1
             ;;
         "--rc")
-            [ -e ${value} ] && rc-parser ${value} || true
+            if [ -e ${CLI_DIRECTORY}/${value} ]; then
+                CLI_OPTIONS_RC_FILENAME=${CLI_DIRECTORY}/${value}
+                rc-parser ${CLI_OPTIONS_RC_FILENAME}
+            elif [ -d ${CLI_REPO_DIR} ] && [ -e ${CLI_REPO_DIR}/${value} ]; then
+                CLI_OPTIONS_RC_FILENAME=${CLI_REPO_DIR}/${value}
+                rc-parser ${CLI_OPTIONS_RC_FILENAME}
+            elif [ -e ${value} ]; then
+                CLI_OPTIONS_RC_FILENAME=${value}
+                rc-parser ${CLI_OPTIONS_RC_FILENAME}
+            else
+                echo "Runtime configuration '${value}' can't find at ${CLI_DIRECTORY}, ${CLI_REPO_DIR}, and other place."
+                return 1
+            fi
             ;;
     esac
 }
