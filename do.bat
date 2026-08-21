@@ -188,15 +188,36 @@ goto end
 @rem ------------------- Command "pack" method -------------------
 
 :cli-pack
+    @rem Execute publish
     call :cli-pub
-    cd %cd%\cache\publish
-    tar -zcvf %PROJECT_NAME%.tgz .
-    cd %CLI_DIRECTORY%
-    if EXIST %cd%\cache\package (rd /S /Q %cd%\cache\package)
-    mkdir %cd%\cache\package
-    move %cd%\cache\publish\%PROJECT_NAME%.tgz %cd%\cache\package\
-    git log --pretty=format:"* %%h - %%s (%%an, %%ad)" --date=short > %cd%\cache\package\CHANGELOG.md
 
+    @rem Package publish into tar.gz file.
+    if EXIST %CLI_DIRECTORY%\cache\package (rd /S /Q %CLI_DIRECTORY%\cache\package)
+    mkdir %CLI_DIRECTORY%\cache\package
+    cd %CLI_DIRECTORY%\cache\publish
+    tar -zcvf %CLI_DIRECTORY%\cache\package\%PROJECT_NAME%.tgz .
+
+    @rem Package publish into container image, with docker-cli image
+    if EXIST %CLI_DIRECTORY%\cache\pack.do (rd /S /Q %CLI_DIRECTORY%\cache\pack.do)
+    mkdir %CLI_DIRECTORY%\cache\pack.do
+    xcopy /Y /S /Q %CLI_DIRECTORY%\conf\docker\sdk\ %CLI_DIRECTORY%\cache\pack.do\
+    mkdir %CLI_DIRECTORY%\cache\pack.do\cli
+    xcopy /Y /S /Q %CLI_DIRECTORY%\cache\publish\ %CLI_DIRECTORY%\cache\pack.do\cli\
+    cd %CLI_DIRECTORY%\cache\pack.do
+    tar -zcvf %CLI_DIRECTORY%\cache\package\%PROJECT_NAME%_docker-cli.tgz .
+
+    @rem Package publish into container image, with bash image
+    if EXIST %CLI_DIRECTORY%\cache\pack.do (rd /S /Q %CLI_DIRECTORY%\cache\pack.do)
+    mkdir %CLI_DIRECTORY%\cache\pack.do
+    xcopy /Y /S /Q %CLI_DIRECTORY%\conf\docker\run\ %CLI_DIRECTORY%\cache\pack.do\
+    mkdir %CLI_DIRECTORY%\cache\pack.do\cli
+    xcopy /Y /S /Q %CLI_DIRECTORY%\cache\publish\ %CLI_DIRECTORY%\cache\pack.do\cli\
+    cd %CLI_DIRECTORY%\cache\pack.do
+    tar -zcvf %CLI_DIRECTORY%\cache\package\%PROJECT_NAME%_bash.tgz .
+
+    @rem Generate CHANGELOG.md
+    cd %CLI_DIRECTORY%
+    git log --pretty=format:"* %%h - %%s (%%an, %%ad)" --date=short > %cd%\cache\package\CHANGELOG.md
     goto end
 
 :cli-pack-args

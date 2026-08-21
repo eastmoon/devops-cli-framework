@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /usr/local/devops
+bash do.sh "${@}"

@@ -1,5 +1,5 @@
 # Step : base
-FROM docker:cli
+FROM bash
 
 # Step : Install bash
 RUN apk update && \
@@ -8,11 +8,7 @@ RUN apk update && \
 
 # Step : Install CLI
 ADD ./cli /usr/local/devops
-RUN cat <<EOF > /bin/devops-cli
-#!/bin/bash
-cd /usr/local/devops
-bash do.sh "\${@}"
-EOF
+ADD ./devops-cli /bin/devops-cli
 RUN chmod +x /bin/devops-cli
 
 ## Setting container startup
