@@ -48,8 +48,10 @@ function ini-parser() {
         section_content=$(sed -n "/^\[${s}\]/,/^\[/{/^\[/d;/^;/d;/^$/d;p}" ${CLI_INI_FILENAME})
         if [ ! -z "${section_content}" ]; then
             while IFS='=' read -r k v; do
-                eval v="${v}"
-                export ${k}="${v}"
+                if [ -z ${!k} ]; then
+                  eval v="${v}"
+                  export ${k}="${v}"
+                fi
             done <<< "${section_content}"
         else
             echo "Section ${s} not find in ${CLI_INI_FILENAME}."
@@ -60,8 +62,10 @@ function ini-parser() {
         section_content=$(sed -n "/^\[${s}\]/,/^\[/{/^\[/d;/^;/d;/^$/d;p}" ${CLI_INI_FILENAME})
         if [ ! -z "${section_content}" ]; then
             while IFS='=' read -r k v; do
-                eval v="${v}"
-                export ${k}="${v}"
+                if [ -z ${!k} ]; then
+                  eval v="${v}"
+                  export ${k}="${v}"
+                fi
             done <<< "${section_content}"
         else
             echo "Section ${s} not find in ${CLI_INI_FILENAME}."
